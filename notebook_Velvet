@@ -1,0 +1,1343 @@
+2019_07_17
+
+Part 0 -– Write unit tests
+
+Purpose: To Understand the details of what your algorithm should do.
+
+
+
+                      kcnt = strlen - k + 1
+                      kcnt + k -1 = strlen
+                      100 + 49 - 1 = 148
+                      80 + 49 - 1 = 128
+                      60 + 49 - 1 = 108
+
+
+
+                      >NODE_1_length_100_cov_128
+                      CTCCCGGCTGGAACTCCCGTAGCTGAGCTCTACGGTTATAGATTCTGGCTTGGGCGTGTTGGGCTTGTTGCATATGCTCCCGCACCAGGGGCCATACCTTAGCCATCCTGTCCTGCATCTGGTCGACATACTCTATGGCGGAGCGATG
+                      >NODE_1_length_80_cov_128
+                      CTCCCGGCTGGAACTCCCGTAGCTGAGCTCTACGGTTATAGATTCTGGCTTGGGCGTGTTGGGCTTGTTGCATATGCTCCCGCACCAGGGGCCATACCTTAGCCATCCTGTCCTGCATCTGGTCGACA
+                      >NODE_1_length_60_cov_128
+                      CTCCCGGCTGGAACTCCCGTAGCTGAGCTCTACGGTTATAGATTCTGGCTTGGGCGTGTTGGGCTTGTTGCATATGCTCCCGCACCAGGGGCCATACCTTAGCCATCC
+
+
+                      Number of contigs= 3
+                      Maximum contig length = 148
+                      Mean contig length = (148+128+108)/3 = 128
+                      Total length of the genome assembly = 148+128+108=384
+                      mean depth coverage = (148+128+108)/3= 128
+                      Half sum = Total length/2 = 384/2= 192
+                      N50 = 148>=192 False, 148 + 128 >=192 True ——> N50 = 128
+
+                      -Created a python script "ps6_stats.py" to run calculations
+ps6_stats.py          /var/folders/x3/cql658p15ts__8mqw6cwrfn00000gn/T/53437c04/talapas-ln1.uoregon.edu/projects/bgmp/gperez8/Bi621/PSs/PS6/ps6_stats.py
+
+                      # Imports modules
+                      import re
+
+
+                      file="unit_test.fa"
+
+
+                      #Creates variables
+                      N50 = 0
+                      K = 49
+
+                      #Creates lists
+                      Kmer_len = []
+                      physical_length = []
+                      Kmer_cov = []
+
+
+                      # opens a text file to read and stores the text file as a variable.
+                      with open(file, 'r') as fh:
+
+                          # A for loop that goes through each line in the text file.
+                          for line in fh:
+
+                              # regex function that finds the line that has the specific first character.
+                              if re.match(r'^>', line):
+
+                                  #Uses regex to find the specif pattern and returns an array of finds.
+                                  match1 = re.findall(r'length_(\d+)_cov_.*', line)
+
+                                  # for loop that goes through an array
+                                  for i in match1:
+
+                                      # adds float values to a new list
+                                      Kmer_len.append(float(i))
+
+                                      #sorts the list
+                                      Kmer_len.sort(reverse=True)
+
+                                  #Uses regex to find the specif pattern.
+                                  match2 = re.findall(r'length_\d+_cov_(.*)', line)
+
+                                  # for loop that goes through an array
+                                  for i in match2:
+
+                                      # adds float values to a new list
+                                      Kmer_cov.append(float(i))
+
+                                      #sorts the list
+                                      Kmer_cov.sort(reverse=True)
+
+                      # for loop that goes through the lengh of an array
+                      for i in range(len(Kmer_len)):
+
+                          # adds computed values to a new list
+                          physical_length.append(Kmer_len[i] + K -1)
+
+
+                      number_contigs = len(physical_length)
+
+                      max_contig = physical_length[0]
+
+                      mean_contig = sum(physical_length)/len(physical_length)
+
+                      total_len_contigs = sum(physical_length)
+
+                      half_sum = total_len_contigs/2
+
+                      # Jason said that might be wrong
+                      mean_depth_coverage = sum(Kmer_cov)/(len(Kmer_cov))
+
+                      # Creates a variable
+                      kmer_sum = 0
+
+                      # for loop that goes through the lengh of an array
+                      for i in range(len(physical_length)):
+
+                              # computes the physical length sum using the for loop
+                              kmer_sum = kmer_sum + physical_length[i]
+
+                              # if statemnt that checks if the physical length
+                              # sum equals or is greater then the mid point
+                              if kmer_sum>= half_sum:
+
+                                  # If true than the index value is stored into a variable
+                                  N50 = physical_length[i]
+
+
+                                  break
+
+                      # prints statements
+                      print("Number of contigs:", number_contigs)
+                      print("Maximum contig lenth:", max_contig)
+                      print("Mean contig:", mean_contig)
+                      print("Total length of the genome assembly:",total_len_contigs )
+                      print("Mean depth coverage:", mean_depth_coverage)
+                      print("N50 value of assembly:", N50)
+
+                      -Created a bash script "python_script.sh" to run the python script on the queuing system on HPC
+python_script.sh         /var/folders/x3/cql658p15ts__8mqw6cwrfn00000gn/T/53437c04/talapas-ln1.uoregon.edu/projects/bgmp/gperez8/Bi621/PSs/PS6/python_script.sh
+
+                      -specifies what shell interpreter to use and must be on first line
+                      #!/bin/bash
+
+                      -special comments that communicate job flags to SLURM
+                      #SBATCH --account=bgmp
+                      #SBATCH --partition=bgmp
+                      #SBATCH --job-name=PS6
+                      #SBATCH --output=slurm-%j-%x.out
+                      #SBATCH --time=0-01:00:00
+                      #SBATCH --nodes=1
+                      #SBATCH --ntasks-per-node=1
+                      #SBATCH --cpus-per-task=7
+
+                      -makes sure to use the correct python version
+                      conda deactivate
+                      conda deactivate
+                      conda deactivate
+                      conda deactivate
+                      conda activate bgmp_py3
+
+                      -runs the python script
+                      /usr/bin/time -v python ./ps6_stats.py
+
+                      -submitting a job script
+                      (bgmp_py3) [gperez8@talapas-ln1 PS6]$ sbatch python_script.sh
+                      Submitted batch job 9618882
+
+                      -displaying the output
+                      (bgmp_py3) [gperez8@talapas-ln1 PS6]$ cat slurm-9618882-PS8.out
+                      Number of contigs: 3
+                      Maximum contig lenth: 148.0
+                      Mean contig: 128.0
+                      Total length of the genome assembly: 384.0
+                      Mean depth coverage: 128.0
+                      N50 value of assembly: 128.0
+                      	Command being timed: "python ./ps6_stats.py"
+                      	User time (seconds): 0.45
+                      	System time (seconds): 0.34
+                      	Percent of CPU this job got: 154%
+                      	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.51
+                      	Average shared text size (kbytes): 0
+                      	Average unshared data size (kbytes): 0
+                      	Average stack size (kbytes): 0
+                      	Average total size (kbytes): 0
+                      	Maximum resident set size (kbytes): 52256
+                      	Average resident set size (kbytes): 0
+                      	Major (requiring I/O) page faults: 0
+                      	Minor (reclaiming a frame) page faults: 12408
+                      	Voluntary context switches: 211
+                      	Involuntary context switches: 199838
+                      	Swaps: 0
+                      	File system inputs: 0
+                      	File system outputs: 0
+                      	Socket messages sent: 0
+                      	Socket messages received: 0
+                      	Signals delivered: 0
+                      	Page size (bytes): 4096
+                      	Exit status: 0
+
+Discussion              -The code behaves as expected.
+
+
+
+
+
+Part 2 – Velvet
+
+Purpose: To assemble fosmids from gold eye fish (Hiodon alossoides) from quality trimmed Illumina PE100 reads.
+
+Tools: Velvet
+       Python 3.7.3
+       talapas-ln1
+
+Files: "/projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq_1"
+       "/projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq_2"
+       "/projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq.unmatched"
+
+Setting up: Login talapas: ssh gperez8@talapas-ln1.uoregon.edu:/projects/bgmp/shared/Bi621
+
+Installing Velvet:[gperez8@talapas-ln1 ~]$ conda activate bgmp_py3
+                  (bgmp_py3) [gperez8@talapas-ln1 ~]$ conda install velvet -c bioconda
+                  (bgmp_py3) [gperez8@talapas-ln1 ~]$ velvetg
+
+Problem set: Our fosmid library is comprised of 50 fosmids, each (approximately) 40 Kb long.
+                   How many total nt should be in this fosmid library?
+ 50 x 40 = 200kb
+
+                   Calculating expected coverage: From slide 38, 190709_GenomeAssembly_and_Velvet_PB
+                                                  Coverage=N*L/G
+
+Created a python script, ‘total_num_nt.py’, to calculate the total number of nucleotides and the number of records.
+                    /var/folders/x3/cql658p15ts__8mqw6cwrfn00000gn/T/53437c04/talapas-ln1.uoregon.edu/projects/bgmp/gperez8/Bi621/PSs/PS6/total_num_nt.py
+
+total_num_nt.py
+                    #!/usr/bin/env python
+
+
+                    #make 'CATEGORIES=4' 'MAXKMERLENGTH=50' 'OPENMP=1' 'LONGSEQUENCES=1' 'BUNDLEDZLIB=1'
+                    #mkdir -p $PREFIX/bin
+                    #cp velvetg velveth $PREFIX/bin
+
+                    # Creates variables for files
+                    file1 = "/projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq_1"
+                    file2 = "/projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq_2"
+                    file3 = "/projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq.unmatched"
+
+                    # Creates a list of files
+                    files=[file1, file2, file3]
+
+                    # Creates a variable
+                    total=0
+                    count=0
+
+                    # A for loop that goes through a list of files
+                    for file in files:
+
+                        # Creates a variable
+                        LN = 0
+                        with open(file,"r") as fh:
+
+
+
+                            # A for loop that goes through each line in the text file.
+                            for line in fh:
+
+                                # updates the variable by an addition of one after each loop.
+                                LN = LN + 1
+                                count+=1
+
+                                # If statemnt to get the second line from each record in text file.
+                                if LN%4 == 2:
+
+                                    # Removes the new line character
+                                    line = line.strip()
+
+
+                                    # Stores the length sum to a variable and continue to
+                                    # to add after each loop.
+                                    total = len(line)+total
+
+                    # Prints statement
+                    print("Number_records:", count/4)
+                    print("total number of nt:", total)
+
+Created a script in bash using python to run total_num_nt.py on the queuing system on HPC:
+
+python_script.sh
+                    -specifies what shell interpreter to use and must be on first line
+                    #!/bin/bash
+
+                    -special comments that communicate job flags to SLURM
+                    #SBATCH --account=bgmp
+                    #SBATCH --partition=bgmp
+                    #SBATCH --job-name=PS6
+                    #SBATCH --output=slurm-%j-%x.out
+                    #SBATCH --time=0-01:00:00
+                    #SBATCH --nodes=1
+                    #SBATCH --ntasks-per-node=1
+                    #SBATCH --cpus-per-task=7
+
+                    -makes sure to use the correct python version
+                    conda deactivate
+                    conda deactivate
+                    conda deactivate
+                    conda deactivate
+                    conda activate bgmp_py3
+
+
+
+                    - runs python script
+                    /usr/bin/time -v python ./total_num_nt.py
+
+                    -submitting a job script
+                    (bgmp_py3) [gperez8@talapas-ln1 PS6]$ sbatch python_script.sh
+                    Submitted batch job 9618932
+
+                    -displaying the output
+                    (bgmp_py3) [gperez8@talapas-ln1 PS6]$ cat slurm-9618932-PS6.out
+                    Number_records: 2567781.0
+                    total number of nt: 197182599
+                    	Command being timed: "python ./total_num_nt.py"
+                    	User time (seconds): 2.61
+                    	System time (seconds): 0.17
+                    	Percent of CPU this job got: 99%
+                    	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:02.80
+                    	Average shared text size (kbytes): 0
+                    	Average unshared data size (kbytes): 0
+                    	Average stack size (kbytes): 0
+                    	Average total size (kbytes): 0
+                    	Maximum resident set size (kbytes): 10228
+                    	Average resident set size (kbytes): 0
+                    	Major (requiring I/O) page faults: 0
+                    	Minor (reclaiming a frame) page faults: 2461
+                    	Voluntary context switches: 29
+                    	Involuntary context switches: 3
+                    	Swaps: 0
+                    	File system inputs: 0
+                    	File system outputs: 0
+                    	Socket messages sent: 0
+                    	Socket messages received: 0
+                    	Signals delivered: 0
+                    	Page size (bytes): 4096
+                    	Exit status: 0
+
+Calculating the expected coverage:
+                      —From slide 38, 190709_GenomeAssembly_and_Velvet_PB
+                      Coverage=N*L/G
+                      coverage=(197182599)/2000000 = 98.5912995
+
+Calculating the kmer coverage:
+                      —From slide 38, 190709_GenomeAssembly_and_Velvet_PB
+                      Lmean : mean read length for the full data set.
+                      Lmean=197182599/2567781 = 76.7910499377
+
+                      —From problem set: k-mer sizes of 31, 41, and 49.
+                      	Ck =C*(Lmean -K+1)/Lmean
+                        Ck_31= (98.5912995)(76.7910499377 -31+1)/76.7910499377= 60.0745845
+                        Ck_41= (98.5912995)(76.7910499377-41+1)/76.7910499377= 47.2356795
+                        Ck_49= (98.5912995)(76.7910499377-49+1)/76.7910499377= 36.9645555
+Running Velvet: velveth
+                        Created a script in bash using python to run "velvet_test_run.sh" on the queuing system on HPC:
+velvet_test_run.sh      /var/folders/x3/cql658p15ts__8mqw6cwrfn00000gn/T/53437c04/talapas-ln1.uoregon.edu/projects/bgmp/gperez8/Bi621/PSs/PS6/velvet_test_run.sh
+
+                        -special comments that communicate job flags to SLURM
+                        #!/usr/bin/env bash
+                        #SBATCH --account=bgmp
+                        #SBATCH --partition=bgmp
+                        #SBATCH --job-name=ps6
+                        #SBATCH --output=slurm-%j-%x.out
+                        #SBATCH --time=0-01:00:00
+                        #SBATCH --nodes=1
+                        #SBATCH --ntasks-per-node=1
+                        #SBATCH --cpus-per-task=3
+
+                        conda deactivate
+                        conda activate bgmp_py3
+
+                        -makes sure to use the correct python version
+                        file1="/projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq_1"
+                        file2="/projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq_2"
+                        file3="/projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq.unmatched"
+
+                        -makes directories
+                        mkdir -p velvet_test
+
+                        -runs velveth with a kmer sizes
+                        /usr/bin/time -v velveth velevt_test 31 -shortPaired -fastq $file1 $file2 -short -fastq  $file3
+
+                        - displaying the output
+                        (bgmp_py3) [gperez8@talapas-ln1 PS6]$ cat slurm-9618977-ps6.out
+                        [0.000000] Reading FastQ file /projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq_1;
+                        [1.401837] 858989 sequences found
+                        [1.401838] Done
+                        [1.402079] Reading FastQ file /projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq_2;
+                        [2.767106] 858989 sequences found
+                        [2.767108] Done
+                        [2.767452] Reading FastQ file /projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq.unmatched;
+                        [4.094780] 849803 sequences found
+                        [4.094782] Done
+                        [4.111777] Reading read set file velevt_test/Sequences;
+                        [4.485160] 2567781 sequences found
+                        [6.171282] Done
+                        [6.171286] 2567781 sequences in total.
+                        [6.171863] Writing into roadmap file velevt_test/Roadmaps...
+                        [7.866520] Inputting sequences...
+                        [7.870671] Inputting sequence 0 / 2567781
+                        [10.523166] Inputting sequence 1000000 / 2567781
+                        [11.127682] Inputting sequence 2000000 / 2567781
+                        [24.742237]  === Sequences loaded in 16.875727 s
+                        [24.743194] Done inputting sequences
+                        [24.743196] Destroying splay table
+                        [24.762654] Splay table destroyed
+                        	Command being timed: "velveth velevt_test 31 -shortPaired -fastq /projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq_1 /projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq_2 -short -fastq /projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq.unmatched"
+                        	User time (seconds): 54.55
+                        	System time (seconds): 1.29
+                        	Percent of CPU this job got: 225%
+                        	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:24.77
+                        	Average shared text size (kbytes): 0
+                        	Average unshared data size (kbytes): 0
+                        	Average stack size (kbytes): 0
+                        	Average total size (kbytes): 0
+                        	Maximum resident set size (kbytes): 732320
+                        	Average resident set size (kbytes): 0
+                        	Major (requiring I/O) page faults: 0
+                        	Minor (reclaiming a frame) page faults: 463936
+                        	Voluntary context switches: 538
+                        	Involuntary context switches: 1072
+                        	Swaps: 0
+                        	File system inputs: 0
+                        	File system outputs: 0
+                        	Socket messages sent: 0
+                        	Socket messages received: 0
+                        	Signals delivered: 0
+                        	Page size (bytes): 4096
+                        	Exit status: 0
+
+
+
+
+
+
+
+
+                        Created a script in bash using python to run "Velveth_run.sh" on the queuing system on HPC:
+velveth_run.sh          /var/folders/x3/cql658p15ts__8mqw6cwrfn00000gn/T/53437c04/talapas-ln1.uoregon.edu/projects/bgmp/gperez8/Bi621/PSs/PS6/velveth_run.sh
+
+                        -special comments that communicate job flags to SLURM
+                        #!/usr/bin/env bash
+                        #SBATCH --account=bgmp
+                        #SBATCH --partition=bgmp
+                        #SBATCH --job-name=ps6
+                        #SBATCH --output=slurm-%j-%x.out
+                        #SBATCH --time=0-01:00:00
+                        #SBATCH --nodes=1
+                        #SBATCH --ntasks-per-node=1
+                        #SBATCH --cpus-per-task=3
+
+                        -makes sure to use the correct python version
+                        conda deactivate
+                        conda activate bgmp_py3
+
+                        -Creates variables
+                        file1="/projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq_1"
+                        file2="/projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq_2"
+                        file3="/projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq.unmatched"
+
+                        -makes directories
+                        mkdir -p velveth_dir_31
+                        mkdir -p velveth_dir_41
+                        mkdir -p velveth_dir_49
+
+                        -runs velveth with different kmer sizes
+                        /usr/bin/time -v velveth velveth_dir_31 31 -shortPaired -fastq $file1 $file2 -short -fastq  $file3
+                        /usr/bin/time -v velveth velveth_dir_41 41 -shortPaired -fastq $file1 $file2 -short -fastq  $file3
+                        /usr/bin/time -v velveth velveth_dir_49 49 -shortPaired -fastq $file1 $file2 -short -fastq  $file3
+
+
+
+                        -submitting a job script
+                        (bgmp_py3) [gperez8@talapas-ln1 PS6]$ sbatch velveth_run.sh
+                        Submitted batch job 9618981
+
+                        -displaying the output
+                        (bgmp_py3) [gperez8@talapas-ln1 PS6]$ cat slurm-9618981-ps6.out
+                        [0.000000] Reading FastQ file /projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq_1;
+                        [1.450530] 858989 sequences found
+                        [1.450531] Done
+                        [1.450587] Reading FastQ file /projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq_2;
+                        [2.921271] 858989 sequences found
+                        [2.921272] Done
+                        [2.943559] Reading FastQ file /projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq.unmatched;
+                        [4.244723] 849803 sequences found
+                        [4.244725] Done
+                        [4.260370] Reading read set file velveth_dir_31/Sequences;
+                        [4.619448] 2567781 sequences found
+                        [6.300716] Done
+                        [6.300720] 2567781 sequences in total.
+                        [6.301698] Writing into roadmap file velveth_dir_31/Roadmaps...
+                        [7.977139] Inputting sequences...
+                        [7.981285] Inputting sequence 0 / 2567781
+                        [12.851976] Inputting sequence 2000000 / 2567781
+                        [23.063057] Inputting sequence 1000000 / 2567781
+                        [29.690475]  === Sequences loaded in 21.713347 s
+                        [29.691537] Done inputting sequences
+                        [29.691540] Destroying splay table
+                        [29.710743] Splay table destroyed
+                        	Command being timed: "velveth velveth_dir_31 31 -shortPaired -fastq /projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq_1 /projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq_2 -short -fastq /projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq.unmatched"
+                        	User time (seconds): 64.79
+                        	System time (seconds): 1.31
+                        	Percent of CPU this job got: 222%
+                        	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:29.71
+                        	Average shared text size (kbytes): 0
+                        	Average unshared data size (kbytes): 0
+                        	Average stack size (kbytes): 0
+                        	Average total size (kbytes): 0
+                        	Maximum resident set size (kbytes): 732308
+                        	Average resident set size (kbytes): 0
+                        	Major (requiring I/O) page faults: 0
+                        	Minor (reclaiming a frame) page faults: 499442
+                        	Voluntary context switches: 477
+                        	Involuntary context switches: 1110
+                        	Swaps: 0
+                        	File system inputs: 0
+                        	File system outputs: 0
+                        	Socket messages sent: 0
+                        	Socket messages received: 0
+                        	Signals delivered: 0
+                        	Page size (bytes): 4096
+                        	Exit status: 0
+
+                        skipped lines in output  ..........
+
+                        27] Splay table destroyed
+                        	Command being timed: "velveth velveth_dir_41 41 -shortPaired -fastq /projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq_1 /projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq_2 -short -fastq /projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq.unmatched"
+                        	User time (seconds): 53.33
+                        	System time (seconds): 1.28
+                        	Percent of CPU this job got: 215%
+                        	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:25.37
+                        	Average shared text size (kbytes): 0
+                        	Average unshared data size (kbytes): 0
+                        	Average stack size (kbytes): 0
+                        	Average total size (kbytes): 0
+                        	Maximum resident set size (kbytes): 718916
+                        	Average resident set size (kbytes): 0
+                        	Major (requiring I/O) page faults: 0
+                        	Minor (reclaiming a frame) page faults: 466320
+                        	Voluntary context switches: 447
+                        	Involuntary context switches: 920
+                        	Swaps: 0
+                        	File system inputs: 0
+                        	File system outputs: 0
+                        	Socket messages sent: 0
+                        	Socket messages received: 0
+                        	Signals delivered: 0
+                        	Page size (bytes): 4096
+                        	Exit status: 0
+
+
+                        skipped lines in output  ..........
+
+                        Command being timed: "velveth velveth_dir_49 49 -shortPaired -fastq /projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq_1 /projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq_2 -short -fastq /projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq.unmatched"
+                        	User time (seconds): 41.42
+                        	System time (seconds): 1.26
+                        	Percent of CPU this job got: 208%
+                        	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:20.51
+                        	Average shared text size (kbytes): 0
+                        	Average unshared data size (kbytes): 0
+                        	Average stack size (kbytes): 0
+                        	Average total size (kbytes): 0
+                        	Maximum resident set size (kbytes): 688488
+                        	Average resident set size (kbytes): 0
+                        	Major (requiring I/O) page faults: 0
+                        	Minor (reclaiming a frame) page faults: 454211
+                        	Voluntary context switches: 395
+                        	Involuntary context switches: 684
+                        	Swaps: 0
+                        	File system inputs: 0
+                        	File system outputs: 0
+                        	Socket messages sent: 0
+                        	Socket messages received: 0
+                        	Signals delivered: 0
+                        	Page size (bytes): 4096
+                        	Exit status: 0
+
+                          Created a script in bash using python to run "Velvetg_run.sh" on the queuing system on HPC:
+velvetg_run.sh            /var/folders/x3/cql658p15ts__8mqw6cwrfn00000gn/T/53437c04/talapas-ln1.uoregon.edu/projects/bgmp/gperez8/Bi621/PSs/PS6/velvetg_run.sh
+
+                          -special comments that communicate job flags to SLURM
+                          #!/usr/bin/env bash
+                          #SBATCH --account=bgmp
+                          #SBATCH --partition=bgmp
+                          #SBATCH --job-name=ps6
+                          #SBATCH --output=slurm-%j-%x.out
+                          #SBATCH --time=0-01:00:00
+                          #SBATCH --nodes=1
+                          #SBATCH --ntasks-per-node=1
+                          #SBATCH --cpus-per-task=3
+
+                          -makes sure to use the correct python version
+                          conda deactivate
+                          conda activate bgmp_py3
+
+                          -Creates variables
+                          file1="/projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq_1"
+                          file2="/projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq_2"
+                          file3="/projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq.unmatched"
+
+                          -makes directories
+                          mkdir -p velveth_dir_31
+                          mkdir -p velveth_dir_41
+                          mkdir -p velveth_dir_49
+
+                          -runs velvetg at different directories
+                          /usr/bin/time -v velvetg velveth_dir_31
+
+                          /usr/bin/time -v velvetg velveth_dir_41
+
+                          /usr/bin/time -v velvetg velveth_dir_49
+
+
+                          -submitting a job script
+                          (bgmp_py3) [gperez8@talapas-ln1 PS6]$ sbatch velvetg_run.sh
+                          Submitted batch job 9618987
+
+                          -displaying the output
+                          (bgmp_py3) [gperez8@talapas-ln1 PS6]$ cat slurm-9618987-ps6.out
+
+                          skipped lines in output  ..........
+
+                          Command being timed: "velvetg velveth_dir_31"
+                          	User time (seconds): 89.58
+                          	System time (seconds): 2.80
+                          	Percent of CPU this job got: 155%
+                          	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:59.43
+                          	Average shared text size (kbytes): 0
+                          	Average unshared data size (kbytes): 0
+                          	Average stack size (kbytes): 0
+                          	Average total size (kbytes): 0
+                          	Maximum resident set size (kbytes): 501380
+                          	Average resident set size (kbytes): 0
+                          	Major (requiring I/O) page faults: 0
+                          	Minor (reclaiming a frame) page faults: 1616205
+                          	Voluntary context switches: 246
+                          	Involuntary context switches: 1977
+                          	Swaps: 0
+                          	File system inputs: 0
+                          	File system outputs: 0
+                          	Socket messages sent: 0
+                          	Socket messages received: 0
+                          	Signals delivered: 0
+                          	Page size (bytes): 4096
+                          	Exit status: 0
+
+                            skipped lines in output  ..........
+
+                            Command being timed: "velvetg velveth_dir_41"
+                          	User time (seconds): 67.96
+                          	System time (seconds): 1.50
+                          	Percent of CPU this job got: 185%
+                          	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:37.38
+                          	Average shared text size (kbytes): 0
+                          	Average unshared data size (kbytes): 0
+                          	Average stack size (kbytes): 0
+                          	Average total size (kbytes): 0
+                          	Maximum resident set size (kbytes): 485240
+                          	Average resident set size (kbytes): 0
+                          	Major (requiring I/O) page faults: 0
+                          	Minor (reclaiming a frame) page faults: 581316
+                          	Voluntary context switches: 65
+                          	Involuntary context switches: 159
+                          	Swaps: 0
+                          	File system inputs: 0
+                          	File system outputs: 0
+                          	Socket messages sent: 0
+                          	Socket messages received: 0
+                          	Signals delivered: 0
+                          	Page size (bytes): 4096
+                          	Exit status: 0
+
+                            skipped lines in output  ..........
+
+                            Command being timed: "velvetg velveth_dir_49"
+                            	User time (seconds): 52.90
+                            	System time (seconds): 1.05
+                            	Percent of CPU this job got: 175%
+                            	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:30.81
+                            	Average shared text size (kbytes): 0
+                            	Average unshared data size (kbytes): 0
+                            	Average stack size (kbytes): 0
+                            	Average total size (kbytes): 0
+                            	Maximum resident set size (kbytes): 483960
+                            	Average resident set size (kbytes): 0
+                            	Major (requiring I/O) page faults: 0
+                            	Minor (reclaiming a frame) page faults: 299104
+                            	Voluntary context switches: 61
+                            	Involuntary context switches: 241
+                            	Swaps: 0
+                            	File system inputs: 0
+                            	File system outputs: 0
+                            	Socket messages sent: 0
+                            	Socket messages received: 0
+                            	Signals delivered: 0
+                            	Page size (bytes): 4096
+                            	Exit status: 0
+
+Collecting assembly statistics on each result:
+
+                              -Used an updated python script that was used for part 0 and part 1(not shown on notebook). Note. matplotlib prints my barplots wrong. Need to fix.
+ps6_stats_updated.py          /var/folders/x3/cql658p15ts__8mqw6cwrfn00000gn/T/53437c04/talapas-ln1.uoregon.edu/projects/bgmp/gperez8/Bi621/PSs/PS6/ps6_stats_updated.py
+
+                              # Imports modules
+                              import argparse
+                              import re
+                              import matplotlib.pyplot as plt
+
+                              # Creates an arguement passer
+                              parser = argparse.ArgumentParser(description="A program for K-mers")
+
+                              # Adds arguemets by calling the arguement passer
+                              parser.add_argument("-k", "--kmer_size", type = int, help="specify the k-mer size", required=True)
+
+
+                              # Adds arguemets by calling the arguement passer
+                              parser.add_argument("-f", "--filename", help="specify the filename", required=True)
+                              #args = parser.parse_args()
+
+                              # Adds arguemets by calling the arguement passer
+                              parser.add_argument("-o", "--outputname", help="specify the filename", required=True)
+
+                              # Parses arguemets through using the parse args method.
+                              args = parser.parse_args()
+
+                              # creates variables for args parse
+                              K = args.kmer_size
+                              file=args.filename
+                              output=args.outputname
+
+
+                              #Creates variables
+                              N50 = 0
+                              #K = 49
+
+                              #Creates lists
+                              Kmer_len = []
+                              physical_length = []
+                              Kmer_cov = []
+
+                              # opens a text file to read and stores the text file as a variable.
+                              with open(file, 'r') as fh:
+
+                                  # A for loop that goes through each line in the text file.
+                                  for line in fh:
+
+                                      # regex function that finds the line that has the specific first character.
+                                      if re.match(r'^>', line):
+
+                                          #Uses regex to find the specif pattern and returns an array of finds.
+                                          match1 = re.findall(r'length_(\d+)_cov_.*', line)
+
+                                          # for loop that goes through an array
+                                          for i in match1:
+
+                                              # adds float values to a new list
+                                              Kmer_len.append(float(i))
+
+                                              #sorts the list
+                                              Kmer_len.sort(reverse=True)
+
+                                          #Uses regex to find the specif pattern.
+                                          match2 = re.findall(r'length_\d+_cov_(.*)', line)
+
+                                          # for loop that goes through an array
+                                          for i in match2:
+
+                                              # adds float values to a new list
+                                              Kmer_cov.append(float(i))
+
+                                              #sorts the list
+                                              Kmer_cov.sort(reverse=True)
+
+                              # for loop that goes through the lengh of an array
+                              for i in range(len(Kmer_len)):
+
+                                  # adds computed values to a new list
+                                  physical_length.append(Kmer_len[i] + K -1)
+
+
+                              number_contigs = len(physical_length)
+
+                              max_contig = physical_length[0]
+
+                              mean_contig = sum(physical_length)/len(physical_length)
+
+                              total_len_contigs = sum(physical_length)
+
+                              half_sum = total_len_contigs/2
+
+                              # Jason said that might be wrong
+                              mean_depth_coverage = sum(Kmer_cov)/(len(Kmer_cov))
+
+                              # Creates a variable
+                              kmer_sum = 0
+
+                              # for loop that goes through the lengh of an array
+                              for i in range(len(physical_length)):
+
+                                      # computes the physical length sum using the for loop
+                                      kmer_sum = kmer_sum + physical_length[i]
+
+                                      # if statemnt that checks if the physical length
+                                      # sum equals or is greater then the mid point
+                                      if kmer_sum>= half_sum:
+
+                                          # If true than the index value is stored into a variable
+                                          N50 = physical_length[i]
+
+
+                                          break
+
+
+                              # prints statements
+                              print("Number of contigs:", number_contigs)
+                              print("Maximum contig lenth:", max_contig)
+                              print("Mean contig:", mean_contig)
+                              print("Total length of the genome assembly:",total_len_contigs )
+                              print("Mean depth coverage:", mean_depth_coverage)
+                              print("N50 value of assembly:", N50)
+
+                              # Opens a text file to write, stores the text file as a variable.
+                              f1 = open('%s_stats_kmer.tsv'%file, 'w')
+
+
+
+                              # writes the formatted output to the tsv file.
+                              f1.write("Number of contigs:%f\n" % number_contigs)
+                              f1.write("Maximum contig lenth:%f\n" % max_contig)
+                              f1.write("Mean contig:%f\n" % mean_contig)
+                              f1.write("Total length of the genome assembly:%f\n" % total_len_contigs)
+                              f1.write("Mean depth coverage:%f\n" % mean_depth_coverage)
+                              f1.write("N50 value of assembly:%f\n"% N50)
+
+
+                              # Creates a list
+                              div_hundred=[]
+
+                              # for loop that goes through a list
+                              for i in physical_length:
+
+                                  # index is converted to an int
+                                  i = int(i)
+
+                                  # int value is computed to the rounded down hundred
+                                  div_hundred.append((i//100)*100)
+
+
+                              # Creates a dictionary
+                              contig_dict = {}
+
+                              # for loop that goes through a range of 100 with a set max value
+                              for i in range(0, int(max_contig), 100):
+
+                                  #stores 0 as a value for the key
+                                  contig_dict[i] = 0
+
+                              # for loop that goes through a list
+                              for contig in physical_length:
+
+                                  # for loop that goes through the keys in dictionary
+                                  for hundred in contig_dict.keys():
+
+                                      # If statement that compares contig to hundred values
+                                      if contig>= hundred:
+
+                                          # If true then value is stored into variable
+                                          bucket=hundred
+
+                                  # If statement that checks if key is in dictionary
+                                  if bucket in contig_dict:
+
+                                      # if true than increments a value of one
+                                      contig_dict[bucket]+=1
+
+
+                              # writes the formatted output to the tsv file
+                              f1.write("# Contig length\tNumber of contigs in this category\n")
+
+                              # A for loop that goes through the items in the dictionary.
+                              for key, value in contig_dict.items():
+
+                                  # writes the formatted output to the tsv file.
+                                  f1.write("{0}\t{1}\n".format(key,value))
+
+
+                              f1.close()
+
+
+                              # Plots the distribution of quality scores of a specific index position
+                              # in the array.
+                              plt.bar(contig_dict.keys(), contig_dict.values(), log=True)
+
+
+                              # Labels a title
+                              plt.title('KMER_LENGTH = %i' %K)
+
+                              # Labels Y axis
+                              plt.ylabel('Number of contigs in this category')
+
+                              # Limits the x-axis in plot
+                              #plt.xlim(0,100)
+
+                              # Labels x axis
+                              plt.xlabel('Contig length ')
+
+                              # Outputs the plot.
+                              #plt.show()
+
+                              # outputs a png file
+                              plt.savefig(output)
+
+                              -Created a bash script "python_script.sh" to run the python script on the queuing system on HPC
+python_script.sh              /var/folders/x3/cql658p15ts__8mqw6cwrfn00000gn/T/53437c04/talapas-ln1.uoregon.edu/projects/bgmp/gperez8/Bi621/PSs/PS6/python_script.sh
+
+                              -specifies what shell interpreter to use and must be on first line
+                              #!/bin/bash
+
+                              -special comments that communicate job flags to SLURM
+                              #SBATCH --account=bgmp
+                              #SBATCH --partition=bgmp
+                              #SBATCH --job-name=PS6
+                              #SBATCH --output=slurm-%j-%x.out
+                              #SBATCH --time=0-01:00:00
+                              #SBATCH --nodes=1
+                              #SBATCH --ntasks-per-node=1
+                              #SBATCH --cpus-per-task=7
+
+                              -makes sure to use the correct python version
+                              conda deactivate
+                              conda deactivate
+                              conda deactivate
+                              conda deactivate
+                              conda activate bgmp_py3
+
+                              -runs the python script
+k-mer 31                      /usr/bin/time -v python ./ps6_stats_updated.py  -k 31 -f velveth_dir_31/contigs.fa -o contigs_kmer_31_stats
+
+                              -submitting a job script
+                              (bgmp_py3) [gperez8@talapas-ln1 PS6]$ sbatch ps6_stats_scrip31.sh
+                              Submitted batch job 9619137
+
+                              -displaying the output
+                              (bgmp_py3) [gperez8@talapas-ln1 PS6]$ cat slurm-9619137-PS6.out
+
+                              	Command being timed: "python ./ps6_stats_updated.py -k 31 -f velveth_dir_31/contigs.fa -o contigs_kmer_31_stats"
+                              	User time (seconds): 1.09
+                              	System time (seconds): 0.64
+                              	Percent of CPU this job got: 154%
+                              	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:01.12
+                              	Average shared text size (kbytes): 0
+                              	Average unshared data size (kbytes): 0
+                              	Average stack size (kbytes): 0
+                              	Average total size (kbytes): 0
+                              	Maximum resident set size (kbytes): 51820
+                              	Average resident set size (kbytes): 0
+                              	Major (requiring I/O) page faults: 0
+                              	Minor (reclaiming a frame) page faults: 13643
+                              	Voluntary context switches: 217
+                              	Involuntary context switches: 205445
+                              	Swaps: 0
+                              	File system inputs: 0
+                              	File system outputs: 0
+                              	Socket messages sent: 0
+                              	Socket messages received: 0
+                              	Signals delivered: 0
+                              	Page size (bytes): 4096
+                              	Exit status: 0
+
+                                -Did the same for K-mer 41 and 49
+
+                                /var/folders/x3/cql658p15ts__8mqw6cwrfn00000gn/T/53437c04/talapas-ln1.uoregon.edu/projects/bgmp/gperez8/Bi621/PSs/PS6/ps6_stats_scrip41.sh
+
+k-mer 41                        (bgmp_py3) [gperez8@talapas-ln1 PS6]$ sbatch ps6_stats_scrip41.sh
+                                Submitted batch job 9619139
+
+                                (bgmp_py3) [gperez8@talapas-ln1 PS6]$ cat slurm-9619139-PS6.out
+
+
+                                	Command being timed: "python ./ps6_stats_updated.py -k 41 -f velveth_dir_41/contigs.fa -o contigs_kmer_41_stats"
+                                	User time (seconds): 0.73
+                                	System time (seconds): 0.73
+                                	Percent of CPU this job got: 207%
+                                	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.70
+                                	Average shared text size (kbytes): 0
+                                	Average unshared data size (kbytes): 0
+                                	Average stack size (kbytes): 0
+                                	Average total size (kbytes): 0
+                                	Maximum resident set size (kbytes): 54404
+                                	Average resident set size (kbytes): 0
+                                	Major (requiring I/O) page faults: 0
+                                	Minor (reclaiming a frame) page faults: 13027
+                                	Voluntary context switches: 214
+                                	Involuntary context switches: 2
+                                	Swaps: 0
+                                	File system inputs: 0
+                                	File system outputs: 0
+                                	Socket messages sent: 0
+                                	Socket messages received: 0
+                                	Signals delivered: 0
+                                	Page size (bytes): 4096
+                                	Exit status: 0
+
+                                  /var/folders/x3/cql658p15ts__8mqw6cwrfn00000gn/T/53437c04/talapas-ln1.uoregon.edu/projects/bgmp/gperez8/Bi621/PSs/PS6/ps6_stats_scrip_49.sh
+
+k-mer 49                          (bgmp_py3) [gperez8@talapas-ln1 PS6]$ sbatch ps6_stats_scrip_49.sh
+                                  Submitted batch job 9619140
+
+                                  (bgmp_py3) [gperez8@talapas-ln1 PS6]$ cat slurm-9619140-PS6.out
+
+
+                                  	Command being timed: "python ./ps6_stats_updated.py -k 49 -f velveth_dir_49/contigs.fa -o contigs_kmer_49_stats"
+                                  	User time (seconds): 0.61
+                                  	System time (seconds): 0.73
+                                  	Percent of CPU this job got: 228%
+                                  	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.58
+                                  	Average shared text size (kbytes): 0
+                                  	Average unshared data size (kbytes): 0
+                                  	Average stack size (kbytes): 0
+                                  	Average total size (kbytes): 0
+                                  	Maximum resident set size (kbytes): 55368
+                                  	Average resident set size (kbytes): 0
+                                  	Major (requiring I/O) page faults: 0
+                                  	Minor (reclaiming a frame) page faults: 12847
+                                  	Voluntary context switches: 212
+                                  	Involuntary context switches: 1
+                                  	Swaps: 0
+                                  	File system inputs: 0
+                                  	File system outputs: 0
+                                  	Socket messages sent: 0
+                                  	Socket messages received: 0
+                                  	Signals delivered: 0
+                                  	Page size (bytes): 4096
+                                  	Exit status: 0
+
+coverage cutoff to 20x, 60x, and ‘auto’ for k-mer 49
+
+                                    Created a script in bash using python to run "velvet_49_coverage.sh" on the queuing system on HPC:
+                                    /var/folders/x3/cql658p15ts__8mqw6cwrfn00000gn/T/53437c04/talapas-ln1.uoregon.edu/projects/bgmp/gperez8/Bi621/PSs/PS6/velvet_49_coverage.sh
+
+                                    #!/usr/bin/env bash
+                                    #SBATCH --account=bgmp
+                                    #SBATCH --partition=bgmp
+                                    #SBATCH --job-name=ps6
+                                    #SBATCH --output=slurm-%j-%x.out
+                                    #SBATCH --time=0-01:00:00
+                                    #SBATCH --nodes=1
+                                    #SBATCH --ntasks-per-node=1
+                                    #SBATCH --cpus-per-task=3
+
+                                    conda deactivate
+                                    conda activate bgmp_py3
+
+
+                                    file1="/projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq_1"
+                                    file2="/projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq_2"
+                                    file3="/projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq.unmatched"
+
+                                    mkdir -p velveth_dir_31
+                                    mkdir -p velveth_dir_41
+                                    mkdir -p velveth_dir_49
+
+                                    - creates coverage cutoffs, change the name of file to prevent over writing
+                                    /usr/bin/time -v velvetg velveth_dir_49 -cov_cutoff 20
+                                    mv /projects/bgmp/gperez8/Bi621/PSs/PS6/velveth_dir_49/contigs.fa /projects/bgmp/gperez8/Bi621/PSs/PS6/velveth_dir_49/contigs_20.fa
+
+                                    /usr/bin/time -v velvetg velveth_dir_49 -cov_cutoff  60
+                                    mv /projects/bgmp/gperez8/Bi621/PSs/PS6/velveth_dir_49/contigs.fa /projects/bgmp/gperez8/Bi621/PSs/PS6/velveth_dir_49/contigs_60.fa
+
+                                    /usr/bin/time -v velvetg velveth_dir_49 -cov_cutoff auto
+                                    mv /projects/bgmp/gperez8/Bi621/PSs/PS6/velveth_dir_49/contigs.fa /projects/bgmp/gperez8/Bi621/PSs/PS6/velveth_dir_49/contigs_auto.fa
+
+
+                                    (bgmp_py3) [gperez8@talapas-ln1 PS6]$ sbatch velvet_49_coverage.sh
+                                    Submitted batch job 9619152
+
+
+                                    Command being timed: "velvetg velveth_dir_49 -cov_cutoff 20"
+                                  	User time (seconds): 3.18
+                                  	System time (seconds): 0.47
+                                  	Percent of CPU this job got: 99%
+                                  	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.67
+                                  	Average shared text size (kbytes): 0
+                                  	Average unshared data size (kbytes): 0
+                                  	Average stack size (kbytes): 0
+                                  	Average total size (kbytes): 0
+                                  	Maximum resident set size (kbytes): 471812
+                                  	Average resident set size (kbytes): 0
+                                  	Major (requiring I/O) page faults: 0
+                                  	Minor (reclaiming a frame) page faults: 187172
+                                  	Voluntary context switches: 22
+                                  	Involuntary context switches: 6
+                                  	Swaps: 0
+                                  	File system inputs: 0
+                                  	File system outputs: 0
+                                  	Socket messages sent: 0
+                                  	Socket messages received: 0
+                                  	Signals delivered: 0
+                                  	Page size (bytes): 4096
+                                  	Exit status: 0
+
+
+                                    Command being timed: "velvetg velveth_dir_49 -cov_cutoff 60"
+                                  	User time (seconds): 3.07
+                                  	System time (seconds): 0.51
+                                  	Percent of CPU this job got: 99%
+                                  	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.60
+                                  	Average shared text size (kbytes): 0
+                                  	Average unshared data size (kbytes): 0
+                                  	Average stack size (kbytes): 0
+                                  	Average total size (kbytes): 0
+                                  	Maximum resident set size (kbytes): 471820
+                                  	Average resident set size (kbytes): 0
+                                  	Major (requiring I/O) page faults: 0
+                                  	Minor (reclaiming a frame) page faults: 187603
+                                  	Voluntary context switches: 17
+                                  	Involuntary context switches: 5
+                                  	Swaps: 0
+                                  	File system inputs: 0
+                                  	File system outputs: 0
+                                  	Socket messages sent: 0
+                                  	Socket messages received: 0
+                                  	Signals delivered: 0
+                                  	Page size (bytes): 4096
+                                  	Exit status: 0
+
+
+                                    Command being timed: "velvetg velveth_dir_49 -cov_cutoff auto"
+                                    	User time (seconds): 3.15
+                                    	System time (seconds): 0.49
+                                    	Percent of CPU this job got: 99%
+                                    	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.66
+                                    	Average shared text size (kbytes): 0
+                                    	Average unshared data size (kbytes): 0
+                                    	Average stack size (kbytes): 0
+                                    	Average total size (kbytes): 0
+                                    	Maximum resident set size (kbytes): 471860
+                                    	Average resident set size (kbytes): 0
+                                    	Major (requiring I/O) page faults: 0
+                                    	Minor (reclaiming a frame) page faults: 188233
+                                    	Voluntary context switches: 17
+                                    	Involuntary context switches: 6
+                                    	Swaps: 0
+                                    	File system inputs: 0
+                                    	File system outputs: 0
+                                    	Socket messages sent: 0
+                                    	Socket messages received: 0
+                                    	Signals delivered: 0
+                                    	Page size (bytes): 4096
+                                    	Exit status: 0
+
+                                      -Ran python script line 704, "ps6_stats_updated.py"
+                                      /var/folders/x3/cql658p15ts__8mqw6cwrfn00000gn/T/53437c04/talapas-ln1.uoregon.edu/projects/bgmp/gperez8/Bi621/PSs/PS6/ps6_stats_updated.py
+
+coverage 20x                          used the following bash script:
+                                      /var/folders/x3/cql658p15ts__8mqw6cwrfn00000gn/T/53437c04/talapas-ln1.uoregon.edu/projects/bgmp/gperez8/Bi621/PSs/PS6/ps6_cov_20_scrip.sh
+
+                                      /usr/bin/time -v python ./ps6_stats_updated.py  -k 49 -f velveth_dir_49/contigs_20.fa -o coverage_20_k_49
+
+
+                                      (bgmp_py3) [gperez8@talapas-ln1 PS6]$ sbatch ps6_cov_20_scrip.sh
+                                      Submitted batch job 9619156
+
+                                      (bgmp_py3) [gperez8@talapas-ln1 PS6]$ cat slurm-9619156-PS6.out
+                                      Command being timed: "python ./ps6_stats_updated.py -k 49 -f velveth_dir_49/contigs_20.fa -o coverage_20_k_49"
+                                    	User time (seconds): 0.56
+                                    	System time (seconds): 0.74
+                                    	Percent of CPU this job got: 237%
+                                    	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.55
+                                    	Average shared text size (kbytes): 0
+                                    	Average unshared data size (kbytes): 0
+                                    	Average stack size (kbytes): 0
+                                    	Average total size (kbytes): 0
+                                    	Maximum resident set size (kbytes): 53696
+                                    	Average resident set size (kbytes): 0
+                                    	Major (requiring I/O) page faults: 0
+                                    	Minor (reclaiming a frame) page faults: 12847
+                                    	Voluntary context switches: 216
+                                    	Involuntary context switches: 1
+                                    	Swaps: 0
+                                    	File system inputs: 0
+                                    	File system outputs: 0
+                                    	Socket messages sent: 0
+                                    	Socket messages received: 0
+                                    	Signals delivered: 0
+                                    	Page size (bytes): 4096
+                                    	Exit status: 0
+
+coverage 60x                          used the following bash script:
+                                      /var/folders/x3/cql658p15ts__8mqw6cwrfn00000gn/T/53437c04/talapas-ln1.uoregon.edu/projects/bgmp/gperez8/Bi621/PSs/PS6/ps6_cov_60_scrip.sh
+
+                                      /usr/bin/time -v python ./ps6_stats_updated.py  -k 49 -f velveth_dir_49/contigs_60.fa -o coverage_60_k_49
+
+                                      (bgmp_py3) [gperez8@talapas-ln1 PS6]$ sbatch ps6_cov_60_scrip.sh
+                                      Submitted batch job 9619159
+
+                                      Command being timed: "python ./ps6_stats_updated.py -k 49 -f velveth_dir_49/contigs_60.fa -o coverage_60_k_49"
+                                      	User time (seconds): 0.53
+                                      	System time (seconds): 0.73
+                                      	Percent of CPU this job got: 248%
+                                      	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.51
+                                      	Average shared text size (kbytes): 0
+                                      	Average unshared data size (kbytes): 0
+                                      	Average stack size (kbytes): 0
+                                      	Average total size (kbytes): 0
+                                      	Maximum resident set size (kbytes): 52824
+                                      	Average resident set size (kbytes): 0
+                                      	Major (requiring I/O) page faults: 0
+                                      	Minor (reclaiming a frame) page faults: 12575
+                                      	Voluntary context switches: 210
+                                      	Involuntary context switches: 2
+                                      	Swaps: 0
+                                      	File system inputs: 0
+                                      	File system outputs: 0
+                                      	Socket messages sent: 0
+                                      	Socket messages received: 0
+                                      	Signals delivered: 0
+                                      	Page size (bytes): 4096
+                                      	Exit status: 0
+
+coverage auto                           used the following bash script:
+                                        /var/folders/x3/cql658p15ts__8mqw6cwrfn00000gn/T/53437c04/talapas-ln1.uoregon.edu/projects/bgmp/gperez8/Bi621/PSs/PS6/ps6_cov_auto.sh
+
+                                        /usr/bin/time -v python ./ps6_stats_updated.py  -k 49 -f velveth_dir_49/contigs_auto.fa -o coverage_auto_k_49
+
+                                        (bgmp_py3) [gperez8@talapas-ln1 PS6]$ sbatch ps6_cov_auto_scrip.sh
+                                        Submitted batch job 9619161
+
+                                        Command being timed: "python ./ps6_stats_updated.py -k 49 -f velveth_dir_49/contigs_auto.fa -o coverage_auto_k_49"
+                                        	User time (seconds): 0.59
+                                        	System time (seconds): 0.72
+                                        	Percent of CPU this job got: 233%
+                                        	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.56
+                                        	Average shared text size (kbytes): 0
+                                        	Average unshared data size (kbytes): 0
+                                        	Average stack size (kbytes): 0
+                                        	Average total size (kbytes): 0
+                                        	Maximum resident set size (kbytes): 53536
+                                        	Average resident set size (kbytes): 0
+                                        	Major (requiring I/O) page faults: 0
+                                        	Minor (reclaiming a frame) page faults: 12790
+                                        	Voluntary context switches: 211
+                                        	Involuntary context switches: 2
+                                        	Swaps: 0
+                                        	File system inputs: 0
+                                        	File system outputs: 0
+                                        	Socket messages sent: 0
+                                        	Socket messages received: 0
+                                        	Signals delivered: 0
+                                        	Page size (bytes): 4096
+                                        	Exit status: 0
+
+
+Minimum contig length to 500bp            Created a script in bash using python to run "velvet_49_min_500_contig.sh" on the queuing system on HPC:
+                                          /var/folders/x3/cql658p15ts__8mqw6cwrfn00000gn/T/53437c04/talapas-ln1.uoregon.edu/projects/bgmp/gperez8/Bi621/PSs/PS6/velvet_49_min_500_contig.sh
+
+                                          #!/usr/bin/env bash
+                                          #SBATCH --account=bgmp
+                                          #SBATCH --partition=bgmp
+                                          #SBATCH --job-name=ps6
+                                          #SBATCH --output=slurm-%j-%x.out
+                                          #SBATCH --time=0-01:00:00
+                                          #SBATCH --nodes=1
+                                          #SBATCH --ntasks-per-node=1
+                                          #SBATCH --cpus-per-task=3
+
+                                          conda deactivate
+                                          conda activate bgmp_py3
+
+
+                                          file1="/projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq_1"
+                                          file2="/projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq_2"
+                                          file3="/projects/bgmp/shared/Bi621/800_3_PE5_interleaved.fq.unmatched"
+
+                                          mkdir -p velveth_dir_31
+                                          mkdir -p velveth_dir_41
+                                          mkdir -p velveth_dir_49
+
+
+
+                                          /usr/bin/time -v velvetg velveth_dir_49 -cov_cutoff auto -min_contig_lgth 500
+                                          mv /projects/bgmp/gperez8/Bi621/PSs/PS6/velveth_dir_49/contigs.fa /projects/bgmp/gperez8/Bi621/PSs/PS6/velveth_dir_49/contigs_auto_500.fa
+
+                                          (bgmp_py3) [gperez8@talapas-ln1 PS6]$ sbatch velvet_49_min_500_contig.sh
+                                          Submitted batch job 9619166
+
+                                          Command being timed: "velvetg velveth_dir_49 -cov_cutoff auto -min_contig_lgth 500"
+                                          	User time (seconds): 3.13
+                                          	System time (seconds): 0.51
+                                          	Percent of CPU this job got: 99%
+                                          	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:03.66
+                                          	Average shared text size (kbytes): 0
+                                          	Average unshared data size (kbytes): 0
+                                          	Average stack size (kbytes): 0
+                                          	Average total size (kbytes): 0
+                                          	Maximum resident set size (kbytes): 471872
+                                          	Average resident set size (kbytes): 0
+                                          	Major (requiring I/O) page faults: 0
+                                          	Minor (reclaiming a frame) page faults: 188236
+                                          	Voluntary context switches: 21
+                                          	Involuntary context switches: 6
+                                          	Swaps: 0
+                                          	File system inputs: 0
+                                          	File system outputs: 0
+                                          	Socket messages sent: 0
+                                          	Socket messages received: 0
+                                          	Signals delivered: 0
+                                          	Page size (bytes): 4096
+                                          	Exit status: 0
+
+                                            used the following bash script:
+                                            /var/folders/x3/cql658p15ts__8mqw6cwrfn00000gn/T/53437c04/talapas-ln1.uoregon.edu/projects/bgmp/gperez8/Bi621/PSs/PS6/ps6_500bp_len_scrip.sh
+
+                                            /usr/bin/time -v python ./ps6_stats_updated.py  -k 49 -f velveth_dir_49/contigs_auto_500.fa -o con_auto_500
+
+                                            (bgmp_py3) [gperez8@talapas-ln1 PS6]$ sbatch ps6_500bp_len_scrip.sh
+                                            Submitted batch job 9619172
+
+                                            Command being timed: "python ./ps6_stats_updated.py -k 49 -f velveth_dir_49/contigs_auto_500.fa -o con_auto_500"
+                                            	User time (seconds): 0.54
+                                            	System time (seconds): 0.74
+                                            	Percent of CPU this job got: 241%
+                                            	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.53
+                                            	Average shared text size (kbytes): 0
+                                            	Average unshared data size (kbytes): 0
+                                            	Average stack size (kbytes): 0
+                                            	Average total size (kbytes): 0
+                                            	Maximum resident set size (kbytes): 52880
+                                            	Average resident set size (kbytes): 0
+                                            	Major (requiring I/O) page faults: 0
+                                            	Minor (reclaiming a frame) page faults: 12560
+                                            	Voluntary context switches: 215
+                                            	Involuntary context switches: 1
+                                            	Swaps: 0
+                                            	File system inputs: 0
+                                            	File system outputs: 0
+                                            	Socket messages sent: 0
+                                            	Socket messages received: 0
+                                            	Signals delivered: 0
+                                            	Page size (bytes): 4096
+                                            	Exit status: 0
