@@ -1,0 +1,86 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1671\cocoasubrtf400
+{\fonttbl\f0\fnil\fcharset0 Menlo-Regular;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\csgray\c0;}
+\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f0\fs22 \cf2 \CocoaLigature0 kcnt = strlen - k + 1\
+kcnt + k -1 = strlen\
+100 + 49 - 1 = 148\
+80 + 49 - 1 = 128\
+60 + 49 - 1 = 108\
+\
+\
+\
+>NODE_1_length_100_cov_128\
+CTCCCGGCTGGAACTCCCGTAGCTGAGCTCTACGGTTATAGATTCTGGCTTGGGCGTGTTGGGCTTGTTGCATATGCTCCCGCACCAGGGGCCATACCTTAGCCATCCTGTCCTGCATCTGGTCGACATACTCTATGGCGGAGCGATG\
+>NODE_1_length_80_cov_128\
+CTCCCGGCTGGAACTCCCGTAGCTGAGCTCTACGGTTATAGATTCTGGCTTGGGCGTGTTGGGCTTGTTGCATATGCTCCCGCACCAGGGGCCATACCTTAGCCATCCTGTCCTGCATCTGGTCGACA\
+>NODE_1_length_60_cov_128\
+CTCCCGGCTGGAACTCCCGTAGCTGAGCTCTACGGTTATAGATTCTGGCTTGGGCGTGTTGGGCTTGTTGCATATGCTCCCGCACCAGGGGCCATACCTTAGCCATCC\
+\
+\
+Number of contigs= 3\
+Maximum contig length = 148\
+Mean contig length = (148+128+108)/3 = 128\
+Total length of the genome assembly = 148+128+108=384\
+mean depth coverage = (148+128+108)/3= 128\
+Half sum = Total length/2 = 384/2= 192\
+N50 = 148>=192 False, 148 + 128 >=192 True \'97\'97> N50 = 128\
+\
+Created a python script\
+\
+\
+\
+\
+\
+\
+Created a bash script \
+\
+\
+\
+(bgmp_py3) [gperez8@talapas-ln1 PS6]$ sbatch python_script.sh \
+Submitted batch job 9618882\
+(bgmp_py3) [gperez8@talapas-ln1 PS6]$ cat slurm-9618882-PS8.out\
+Number of contigs: 3\
+Maximum contig lenth: 148.0\
+Mean contig: 128.0\
+Total length of the genome assembly: 384.0\
+Mean depth coverage: 128.0\
+N50 value of assembly: 128.0\
+	Command being timed: "python ./ps6_stats.py"\
+	User time (seconds): 0.45\
+	System time (seconds): 0.34\
+	Percent of CPU this job got: 154%\
+	Elapsed (wall clock) time (h:mm:ss or m:ss): 0:00.51\
+	Average shared text size (kbytes): 0\
+	Average unshared data size (kbytes): 0\
+	Average stack size (kbytes): 0\
+	Average total size (kbytes): 0\
+	Maximum resident set size (kbytes): 52256\
+	Average resident set size (kbytes): 0\
+	Major (requiring I/O) page faults: 0\
+	Minor (reclaiming a frame) page faults: 12408\
+	Voluntary context switches: 211\
+	Involuntary context switches: 199838\
+	Swaps: 0\
+	File system inputs: 0\
+	File system outputs: 0\
+	Socket messages sent: 0\
+	Socket messages received: 0\
+	Signals delivered: 0\
+	Page size (bytes): 4096\
+	Exit status: 0\
+\
+(bgmp_py3) [gperez8@talapas-ln1 PS6]$ pip install matplotlib\
+Collecting matplotlib\
+\
+\
+(bgmp_py3) [gperez8@talapas-ln1 PS6]$ pip install argparse\
+Collecting argparse\
+  Downloading https://files.pythonhosted.org/packages/f2/94/3af39d34be01a24a6e65433d19e107099374224905f1e0cc6bbe1fd22a2f/argparse-1.4.0-py2.py3-none-any.whl\
+Installing collected packages: argparse\
+Successfully installed argparse-1.4.0\
+\
+}
